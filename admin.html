@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Admin Panel – Campus Events</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #0b0f1a;
+        color: #e5e7eb;
+        display: flex;
+        min-height: 100vh;
+      }
+      /* SIDEBAR */
+      #sidebar {
+        width: 240px;
+        background: #111827;
+        display: flex;
+        flex-direction: column;
+        padding: 24px 0;
+        position: fixed;
+        height: 100vh;
+        transition: transform 0.3s ease;
+        z-index: 100;
+      }
+      #sidebar .logo {
+        padding: 0 24px 24px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #38bdf8;
+        border-bottom: 1px solid #1f2937;
+      }
+      #sidebar nav {
+        flex: 1;
+        padding: 16px 0;
+      }
+      #sidebar nav a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 24px;
+        color: #9ca3af;
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+        border-left: 3px solid transparent;
+      }
+      #sidebar nav a:hover,
+      #sidebar nav a.active {
+        color: #e5e7eb;
+        background: #1f2937;
+        border-left-color: #38bdf8;
+      }
+      #sidebar nav a svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+      #sidebar .logout-btn {
+        margin: 16px;
+        padding: 10px;
+        background: #1f2937;
+        border: 1px solid #374151;
+        color: #f87171;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+      }
+      #sidebar .logout-btn:hover {
+        background: #7f1d1d;
+        border-color: #f87171;
+      }
+      /* MAIN */
+      #main {
+        margin-left: 240px;
+        flex: 1;
+        padding: 32px;
+        min-height: 100vh;
+      }
+      /* LOGIN */
+      #login-screen {
+        position: fixed;
+        inset: 0;
+        background: #0b0f1a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+      }
+      .login-card {
+        background: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 16px;
+        padding: 40px;
+        width: 100%;
+        max-width: 400px;
+      }
+      .login-card h2 {
+        color: #38bdf8;
+        margin-bottom: 8px;
+        font-size: 1.5rem;
+      }
+      .login-card p {
+        color: #6b7280;
+        margin-bottom: 24px;
+        font-size: 0.9rem;
+      }
+      .form-group {
+        margin-bottom: 16px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.85rem;
+        color: #9ca3af;
+      }
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 10px 14px;
+        background: #1f2937;
+        border: 1px solid #374151;
+        border-radius: 8px;
+        color: #e5e7eb;
+        font-size: 0.9rem;
+        transition: border 0.2s;
+      }
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #38bdf8;
+      }
+      .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background: #38bdf8;
+        color: #0b0f1a;
+      }
+      .btn-primary:hover {
+        background: #0ea5e9;
+        box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+      }
+      .btn-danger {
+        background: #ef4444;
+        color: #fff;
+      }
+      .btn-danger:hover {
+        background: #dc2626;
+      }
+      .btn-secondary {
+        background: #1f2937;
+        color: #e5e7eb;
+        border: 1px solid #374151;
+      }
+      .btn-secondary:hover {
+        background: #374151;
+      }
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+      /* CARDS */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+      .stat-card {
+        background: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 12px;
+        padding: 20px;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(56, 189, 248, 0.1);
+      }
+      .stat-card .label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .stat-card .value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #38bdf8;
+      }
+      .stat-card .sub {
+        font-size: 0.8rem;
+        color: #9ca3af;
+        margin-top: 4px;
+      }
+      /* SECTION */
+      .section {
+        display: none;
+      }
+      .section.active {
+        display: block;
+      }
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+      }
+      .section-header h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+      }
+      /* TABLE */
+      .table-wrap {
+        background: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 12px;
+        overflow: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 0.8rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid #1f2937;
+      }
+      td {
+        padding: 12px 16px;
+        font-size: 0.875rem;
+        border-bottom: 1px solid #1f2937;
+        vertical-align: middle;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background: #1f2937;
+        transition: background 0.15s;
+      }
+      .badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .badge-blue {
+        background: #1e3a5f;
+        color: #38bdf8;
+      }
+      .badge-green {
+        background: #14532d;
+        color: #4ade80;
+      }
+      .badge-red {
+        background: #7f1d1d;
+        color: #f87171;
+      }
+      .badge-yellow {
+        background: #713f12;
+        color: #fcd34d;
+      }
+      /* MODAL */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 300;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+      }
+      .modal-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .modal {
+        background: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 16px;
+        padding: 32px;
+        width: 100%;
+        max-width: 560px;
+        max-height: 90vh;
+        overflow-y: auto;
+        transform: scale(0.95);
+        transition: transform 0.2s;
+      }
+      .modal-overlay.open .modal {
+        transform: scale(1);
+      }
+      .modal h3 {
+        margin-bottom: 20px;
+        color: #38bdf8;
+      }
+      .modal-footer {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 20px;
+      }
+      /* ANALYTICS */
+      .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+      }
+      .chart-card {
+        background: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 12px;
+        padding: 20px;
+      }
+      .chart-card h4 {
+        margin-bottom: 16px;
+        color: #9ca3af;
+        font-size: 0.9rem;
+      }
+      .bar-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .bar-label {
+        width: 100px;
+        font-size: 0.8rem;
+        color: #9ca3af;
+        flex-shrink: 0;
+      }
+      .bar-track {
+        flex: 1;
+        background: #1f2937;
+        border-radius: 4px;
+        height: 8px;
+      }
+      .bar-fill {
+        height: 8px;
+        border-radius: 4px;
+        background: #38bdf8;
+        transition: width 0.6s ease;
+      }
+      .bar-count {
+        font-size: 0.8rem;
+        color: #6b7280;
+        width: 30px;
+        text-align: right;
+      }
+      /* SEARCH */
+      .search-bar {
+        padding: 8px 14px;
+        background: #1f2937;
+        border: 1px solid #374151;
+        border-radius: 8px;
+        color: #e5e7eb;
+        font-size: 0.875rem;
+        width: 240px;
+      }
+      .search-bar:focus {
+        outline: none;
+        border-color: #38bdf8;
+      }
+      /* TOAST */
+      #toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #111827;
+        border: 1px solid #38bdf8;
+        color: #e5e7eb;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        z-index: 999;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s;
+        pointer-events: none;
+      }
+      #toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      #toast.error {
+        border-color: #ef4444;
+        color: #f87171;
+      }
+      @media (max-width: 768px) {
+        #sidebar {
+          transform: translateX(-100%);
+        }
+        #sidebar.open {
+          transform: translateX(0);
+        }
+        #main {
+          margin-left: 0;
+        }
+        .hamburger {
+          display: flex;
+        }
+      }
+      .hamburger {
+        display: none;
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 150;
+        background: #111827;
+        border: 1px solid #374151;
+        border-radius: 8px;
+        padding: 8px;
+        cursor: pointer;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .hamburger span {
+        width: 20px;
+        height: 2px;
+        background: #e5e7eb;
+        display: block;
+      }
+    </style>
+  </head>
+  <body></body>
+</html>
+
+<!-- Hamburger for mobile -->
+<button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <h2>Admin Panel</h2>
+    <p>Sign in with your admin account</p>
+    <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="admin@campus.edu"/></div>
+    <div class="form-group"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"/></div>
+    <div id="login-error" style="color:#F87171;font-size:.85rem;margin-bottom:12px;display:none"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="logo">⚡ Admin Panel</div>
+  <nav>
+    <a onclick="showSection('dashboard')" class="active" data-section="dashboard">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </a>
+    <a onclick="showSection('events')" data-section="events">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      Events
+    </a>
+    <a onclick="showSection('users')" data-section="users">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Users
+    </a>
+    <a onclick="showSection('registrations')" data-section="registrations">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Registrations
+    </a>
+    <a onclick="showSection('analytics')" data-section="analytics">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      Analytics
+    </a>
+  </nav>
+  <button class="logout-btn" onclick="doLogout()">⏻ Logout</button>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main">
+
+  <!-- DASHBOARD -->
+  <div id="section-dashboard" class="section active">
+    <div class="section-header"><h2>Dashboard</h2></div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="label">Total Users</div><div class="value" id="stat-users">—</div><div class="sub">Active accounts</div></div>
+      <div class="stat-card"><div class="label">Total Events</div><div class="value" id="stat-events">—</div><div class="sub">Active events</div></div>
+      <div class="stat-card"><div class="label">Registrations</div><div class="value" id="stat-regs">—</div><div class="sub">Confirmed</div></div>
+      <div class="stat-card"><div class="label">Avg per Event</div><div class="value" id="stat-avg">—</div><div class="sub">Registrations</div></div>
+    </div>
+    <h3 style="margin-bottom:16px;color:#9CA3AF;font-size:1rem">Most Popular Events</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Category</th><th>Registered</th><th>Capacity</th></tr></thead>
+        <tbody id="popular-events-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- EVENTS -->
+  <div id="section-events" class="section">
+    <div class="section-header">
+      <h2>Events</h2>
+      <div style="display:flex;gap:12px;align-items:center">
+        <input class="search-bar" placeholder="Search events..." oninput="filterEvents(this.value)"/>
+        <button class="btn btn-primary" onclick="openEventModal()">+ Add Event</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Title</th><th>Category</th><th>Date</th><th>Registered</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="events-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div id="section-users" class="section">
+    <div class="section-header">
+      <h2>Users</h2>
+      <input class="search-bar" placeholder="Search users..." oninput="filterUsers(this.value)"/>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="users-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REGISTRATIONS -->
+  <div id="section-registrations" class="section">
+    <div class="section-header">
+      <h2>Registrations</h2>
+      <button class="btn btn-secondary btn-sm" onclick="exportRegistrations()">⬇ Export JSON</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ticket</th><th>Name</th><th>Event</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="registrations-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div id="section-analytics" class="section">
+    <div class="section-header"><h2>Analytics</h2></div>
+    <div class="analytics-grid">
+      <div class="chart-card"><h4>Top Events by Registrations</h4><div id="chart-popular"></div></div>
+      <div class="chart-card"><h4>Events by Category</h4><div id="chart-category"></div></div>
+      <div class="chart-card"><h4>Monthly Registrations</h4><div id="chart-monthly"></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- EVENT MODAL -->
+<div class="modal-overlay" id="event-modal">
+  <div class="modal">
+    <h3 id="event-modal-title">Add Event</h3>
+    <input type="hidden" id="event-id"/>
+    <div class="form-group"><label>Title</label><input id="ev-title" placeholder="Event title"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group"><label>Category</label>
+        <select id="ev-category"><option value="tech">Tech</option><option value="social">Social</option><option value="sports">Sports</option><option value="career">Career</option><option value="arts">Arts</option><option value="academic">Academic</option></select>
+      </div>
+      <div class="form-group"><label>Department</label>
+        <select id="ev-department"><option value="csit">CSIT</option><option value="mechanical">Mechanical</option><option value="cultural">Cultural</option><option value="sports">Sports</option><option value="business">Business</option></select>
+      </div>
+      <div class="form-group"><label>Difficulty</label>
+        <select id="ev-difficulty"><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select>
+      </div>
+      <div class="form-group"><label>Capacity</label><input type="number" id="ev-capacity" min="1" placeholder="50"/></div>
+      <div class="form-group"><label>Date</label><input type="date" id="ev-date"/></div>
+      <div class="form-group"><label>Time</label><input id="ev-time" placeholder="2:00 PM"/></div>
+    </div>
+    <div class="form-group"><label>Location</label><input id="ev-location" placeholder="Venue"/></div>
+    <div class="form-group"><label>Organizer</label><input id="ev-organizer" placeholder="Organizer name"/></div>
+    <div class="form-group"><label>Price</label><input id="ev-price" placeholder="Free or $10"/></div>
+    <div class="form-group"><label>Tags (comma separated)</label><input id="ev-tags" placeholder="ai, python, workshop"/></div>
+    <div class="form-group"><label>Description</label><textarea id="ev-description" rows="3" placeholder="Event description..."></textarea></div>
+    <div class="form-group" style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="ev-trending" style="width:auto"/>
+      <label for="ev-trending" style="margin:0">Mark as Trending</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('event-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Save Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api'
+  : `${window.location.origin}/api`;
+
+let token = localStorage.getItem('adminToken');
+let allEvents = [], allUsers = [], allRegistrations = [], statsData = {};
+
+// ── AUTH ──────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({email, password})
+    });
+    const data = await res.json();
+    if (!data.success) { errEl.textContent = data.message; errEl.style.display = 'block'; return; }
+    if (data.data.user.role !== 'admin') { errEl.textContent = 'Access denied: not an admin account'; errEl.style.display = 'block'; return; }
+    token = data.data.token;
+    localStorage.setItem('adminToken', token);
+    document.getElementById('login-screen').style.display = 'none';
+    loadAll();
+  } catch(e) { errEl.textContent = 'Connection error'; errEl.style.display = 'block'; }
+}
+
+function doLogout() {
+  localStorage.removeItem('adminToken');
+  token = null;
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+// Allow Enter key on login
+document.getElementById('login-password').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+// ── INIT ──────────────────────────────────────────────
+if (token) { document.getElementById('login-screen').style.display = 'none'; loadAll(); }
+
+async function loadAll() {
+  await Promise.all([loadStats(), loadEvents(), loadUsers(), loadRegistrations()]);
+}
+
+// ── API HELPERS ───────────────────────────────────────
+async function api(path, opts={}) {
+  const res = await fetch(`${API}${path}`, {
+    ...opts,
+    headers: {'Content-Type':'application/json', 'Authorization':`Bearer ${token}`, ...(opts.headers||{})}
+  });
+  return res.json();
+}
+
+// ── NAVIGATION ────────────────────────────────────────
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('#sidebar nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById(`section-${name}`).classList.add('active');
+  document.querySelector(`[data-section="${name}"]`).classList.add('active');
+  if(name==='analytics') renderAnalytics();
+  if(window.innerWidth<=768) document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+// ── STATS ─────────────────────────────────────────────
+async function loadStats() {
+  const data = await api('/admin/stats');
+  if (!data.success) return;
+  statsData = data.data;
+  const o = data.data.overview;
+  document.getElementById('stat-users').textContent = o.totalUsers;
+  document.getElementById('stat-events').textContent = o.totalEvents;
+  document.getElementById('stat-regs').textContent = o.totalRegistrations;
+  document.getElementById('stat-avg').textContent = o.averageRegistrationsPerEvent;
+  const tbody = document.getElementById('popular-events-body');
+  tbody.innerHTML = data.data.popularEvents.map(e => `
+    <tr><td>${e.title}</td><td><span class="badge badge-blue">${e.category}</span></td>
+    <td>${e.registered}</td><td>${e.capacity}</td></tr>`).join('');
+}
+
+// ── EVENTS ────────────────────────────────────────────
+async function loadEvents() {
+  const data = await api('/admin/events?limit=100');
+  if (!data.success) return;
+  allEvents = data.data;
+  renderEvents(allEvents);
+}
+
+function renderEvents(events) {
+  document.getElementById('events-body').innerHTML = events.map(e => `
+    <tr>
+      <td>${e.title}</td>
+      <td><span class="badge badge-blue">${e.category}</span></td>
+      <td>${new Date(e.date).toLocaleDateString()}</td>
+      <td>${e.registered}/${e.capacity}</td>
+      <td><span class="badge ${e.isActive?'badge-green':'badge-red'}">${e.isActive?'Active':'Inactive'}</span></td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" onclick="openEventModal('${e._id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteEvent('${e._id}')">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+function filterEvents(q) {
+  renderEvents(allEvents.filter(e => e.title.toLowerCase().includes(q.toLowerCase())));
+}
+
+function openEventModal(id) {
+  const modal = document.getElementById('event-modal');
+  document.getElementById('event-modal-title').textContent = id ? 'Edit Event' : 'Add Event';
+  document.getElementById('event-id').value = id || '';
+  if (id) {
+    const e = allEvents.find(x => x._id === id);
+    if (e) {
+      document.getElementById('ev-title').value = e.title;
+      document.getElementById('ev-category').value = e.category;
+      document.getElementById('ev-department').value = e.department;
+      document.getElementById('ev-difficulty').value = e.difficulty;
+      document.getElementById('ev-capacity').value = e.capacity;
+      document.getElementById('ev-date').value = e.date ? e.date.split('T')[0] : '';
+      document.getElementById('ev-time').value = e.time;
+      document.getElementById('ev-location').value = e.location;
+      document.getElementById('ev-organizer').value = e.organizer;
+      document.getElementById('ev-price').value = e.price || '';
+      document.getElementById('ev-tags').value = (e.tags||[]).join(', ');
+      document.getElementById('ev-description').value = e.description;
+      document.getElementById('ev-trending').checked = e.popularity === 'trending';
+    }
+  } else {
+    ['ev-title','ev-capacity','ev-date','ev-time','ev-location','ev-organizer','ev-price','ev-tags','ev-description'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('ev-trending').checked = false;
+  }
+  modal.classList.add('open');
+}
+
+async function saveEvent() {
+  const id = document.getElementById('event-id').value;
+  const body = {
+    title: document.getElementById('ev-title').value,
+    category: document.getElementById('ev-category').value,
+    department: document.getElementById('ev-department').value,
+    difficulty: document.getElementById('ev-difficulty').value,
+    capacity: parseInt(document.getElementById('ev-capacity').value),
+    date: document.getElementById('ev-date').value,
+    time: document.getElementById('ev-time').value,
+    location: document.getElementById('ev-location').value,
+    organizer: document.getElementById('ev-organizer').value,
+    price: document.getElementById('ev-price').value || 'Free',
+    tags: document.getElementById('ev-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    description: document.getElementById('ev-description').value,
+    popularity: document.getElementById('ev-trending').checked ? 'trending' : 'normal',
+  };
+  const method = id ? 'PUT' : 'POST';
+  const path = id ? `/admin/events/${id}` : '/admin/events';
+  const data = await api(path, {method, body: JSON.stringify(body)});
+  if (data.success) { toast('Event saved'); closeModal('event-modal'); loadEvents(); loadStats(); }
+  else toast(data.message || 'Error saving event', true);
+}
+
+async function deleteEvent(id) {
+  if (!confirm('Delete this event?')) return;
+  const data = await api(`/admin/events/${id}`, {method:'DELETE'});
+  if (data.success) { toast('Event deleted'); loadEvents(); loadStats(); }
+  else toast(data.message || 'Error', true);
+}
+
+// ── USERS ─────────────────────────────────────────────
+async function loadUsers() {
+  const data = await api('/admin/users?limit=100');
+  if (!data.success) return;
+  allUsers = data.data;
+  renderUsers(allUsers);
+}
+
+function renderUsers(users) {
+  document.getElementById('users-body').innerHTML = users.map(u => `
+    <tr>
+      <td>${u.name}</td>
+      <td>${u.email}</td>
+      <td>${u.department || '—'}</td>
+      <td>
+        <select class="search-bar" style="width:auto;padding:4px 8px" onchange="changeRole('${u._id}',this.value)">
+          <option ${u.role==='student'?'selected':''}>student</option>
+          <option ${u.role==='admin'?'selected':''}>admin</option>
+          <option ${u.role==='organizer'?'selected':''}>organizer</option>
+        </select>
+      </td>
+      <td><span class="badge ${u.isActive?'badge-green':'badge-red'}">${u.isActive?'Active':'Inactive'}</span></td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteUser('${u._id}')">Delete</button></td>
+    </tr>`).join('');
+}
+
+function filterUsers(q) {
+  renderUsers(allUsers.filter(u => u.name.toLowerCase().includes(q.toLowerCase()) || u.email.toLowerCase().includes(q.toLowerCase())));
+}
+
+async function changeRole(id, role) {
+  const data = await api(`/admin/users/${id}`, {method:'PUT', body: JSON.stringify({role})});
+  if (data.success) toast('Role updated');
+  else toast(data.message || 'Error', true);
+}
+
+async function deleteUser(id) {
+  if (!confirm('Deactivate this user?')) return;
+  const data = await api(`/admin/users/${id}`, {method:'DELETE'});
+  if (data.success) { toast('User deactivated'); loadUsers(); }
+  else toast(data.message || 'Error', true);
+}
+
+// ── REGISTRATIONS ─────────────────────────────────────
+async function loadRegistrations() {
+  const data = await api('/admin/registrations?limit=100');
+  if (!data.success) return;
+  allRegistrations = data.data;
+  document.getElementById('registrations-body').innerHTML = allRegistrations.map(r => `
+    <tr>
+      <td><code style="color:#38BDF8">${r.ticketId}</code></td>
+      <td>${r.fullName}</td>
+      <td>${r.event?.title || '—'}</td>
+      <td>${r.event?.date ? new Date(r.event.date).toLocaleDateString() : '—'}</td>
+      <td><span class="badge ${r.status==='confirmed'?'badge-green':r.status==='cancelled'?'badge-red':'badge-yellow'}">${r.status}</span></td>
+      <td>${r.status!=='cancelled'?`<button class="btn btn-danger btn-sm" onclick="cancelReg('${r._id}')">Cancel</button>`:'—'}</td>
+    </tr>`).join('');
+}
+
+async function cancelReg(id) {
+  if (!confirm('Cancel this registration?')) return;
+  const data = await api(`/admin/registrations/${id}/cancel`, {method:'PUT'});
+  if (data.success) { toast('Registration cancelled'); loadRegistrations(); loadStats(); }
+  else toast(data.message || 'Error', true);
+}
+
+function exportRegistrations() {
+  const blob = new Blob([JSON.stringify(allRegistrations, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'registrations.json'; a.click();
+}
+
+// ── ANALYTICS ─────────────────────────────────────────
+function renderAnalytics() {
+  if (!statsData.popularEvents) return;
+  const max = p => Math.max(...p.map(x=>x.registered||x.count||1), 1);
+
+  document.getElementById('chart-popular').innerHTML = statsData.popularEvents.map(e =>
+    `<div class="bar-row"><div class="bar-label">${e.title.substring(0,14)}…</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.round((e.registered/max(statsData.popularEvents))*100)}%"></div></div>
+    <div class="bar-count">${e.registered}</div></div>`).join('');
+
+  document.getElementById('chart-category').innerHTML = (statsData.categoryStats||[]).map(c =>
+    `<div class="bar-row"><div class="bar-label">${c._id}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.round((c.count/max(statsData.categoryStats))*100)}%;background:#818CF8"></div></div>
+    <div class="bar-count">${c.count}</div></div>`).join('');
+
+  document.getElementById('chart-monthly').innerHTML = (statsData.monthlyRegistrations||[]).reverse().map(m =>
+    `<div class="bar-row"><div class="bar-label">${m._id.year}/${m._id.month}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${Math.round((m.count/max(statsData.monthlyRegistrations))*100)}%;background:#34D399"></div></div>
+    <div class="bar-count">${m.count}</div></div>`).join('');
+}
+
+// ── HELPERS ───────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function toast(msg, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (isError?' error':'');
+  setTimeout(() => t.className = '', 3000);
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+</script>
+</body>
+</html>

@@ -159,7 +159,102 @@ exports.getAllEvents = async (req, res) => {
   }
 };
 
-// @desc    Get admin statistics
+// @desc    Create event (admin)
+// @route   POST /api/admin/events
+// @access  Private/Admin
+exports.createEvent = async (req, res) => {
+  try {
+    const event = new Event(req.body);
+    await event.save();
+    res
+      .status(201)
+      .json({ success: true, message: "Event created", data: event });
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Error creating event",
+        error: error.message,
+      });
+  }
+};
+
+// @desc    Update event (admin)
+// @route   PUT /api/admin/events/:id
+// @access  Private/Admin
+exports.updateEvent = async (req, res) => {
+  try {
+    const event = await Event.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!event)
+      return res
+        .status(404)
+        .json({ success: false, message: "Event not found" });
+    res.json({ success: true, message: "Event updated", data: event });
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Error updating event",
+        error: error.message,
+      });
+  }
+};
+
+// @desc    Delete event (admin)
+// @route   DELETE /api/admin/events/:id
+// @access  Private/Admin
+exports.deleteEvent = async (req, res) => {
+  try {
+    const event = await Event.findByIdAndUpdate(
+      req.params.id,
+      { isActive: false },
+      { new: true },
+    );
+    if (!event)
+      return res
+        .status(404)
+        .json({ success: false, message: "Event not found" });
+    res.json({ success: true, message: "Event deleted" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Error deleting event",
+        error: error.message,
+      });
+  }
+};
+
+// @desc    Get participants of an event
+// @route   GET /api/admin/events/:id/participants
+// @access  Private/Admin
+exports.getParticipants = async (req, res) => {
+  try {
+    const registrations = await Registration.find({ event: req.params.id })
+      .populate("user", "name email")
+      .sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      count: registrations.length,
+      data: registrations,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Error fetching participants",
+        error: error.message,
+      });
+  }
+};
+
 // @route   GET /api/admin/stats
 // @access  Private/Admin
 exports.getStats = async (req, res) => {

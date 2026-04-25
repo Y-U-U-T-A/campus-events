@@ -1,5 +1,9 @@
-// API Configuration - auto-detect backend (works with VS Code Live Server, Kiro, or file://)
-const API_BASE_URL = "http://localhost:5000/api";
+// API Configuration - auto-detect backend URL
+const API_BASE_URL =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+    ? "http://localhost:5000/api"
+    : `${window.location.origin}/api`;
 
 // Helper function to make API calls
 async function apiCall(endpoint, options = {}) {
@@ -965,9 +969,16 @@ function updateLoginStatus() {
   if (currentUser) {
     loginBtn.textContent = `👨‍🚀 ${currentUser.name}`;
     loginBtn.onclick = logout;
+    // Show admin button only for admins
+    const adminBtn = document.getElementById("adminPanelBtn");
+    if (adminBtn)
+      adminBtn.style.display =
+        currentUser.role === "admin" ? "inline-block" : "none";
   } else {
     loginBtn.textContent = "👨‍🚀 Login";
     loginBtn.onclick = openLoginModal;
+    const adminBtn = document.getElementById("adminPanelBtn");
+    if (adminBtn) adminBtn.style.display = "none";
   }
 }
 
@@ -1317,3 +1328,365 @@ styleSheet.textContent = `
 @keyframes starTwinkle{0%,100%{transform:scale(1) rotate(0deg)}50%{transform:scale(1.2) rotate(180deg)}}
 `;
 document.head.appendChild(styleSheet);
+
+// ═══════════════════════════════════════════════════════
+// ADMIN PANEL
+// ═══════════════════════════════════════════════════════
+const ADM_API = API_BASE_URL;
+let admEvents = [],
+  admUsers = [],
+  admRegs = [],
+  admStats = {};
+
+function openAdminPanel() {
+  document.getElementById("adminOverlay").style.display = "block";
+  admShow("dashboard");
+  admLoadAll();
+}
+
+function closeAdminPanel() {
+  document.getElementById("adminOverlay").style.display = "none";
+}
+
+function admShow(section) {
+  ["dashboard", "events", "users", "registrations", "analytics"].forEach(
+    (s) => {
+      document.getElementById(`adm-${s}`).style.display =
+        s === section ? "block" : "none";
+    },
+  );
+  document.querySelectorAll(".adm-tab").forEach((t, i) => {
+    t.classList.toggle(
+      "active",
+      ["dashboard", "events", "users", "registrations", "analytics"][i] ===
+        section,
+    );
+  });
+  if (section === "analytics") admRenderAnalytics();
+}
+
+async function admApi(path, opts = {}) {
+  const token = localStorage.getItem("authToken");
+  const res = await fetch(`${ADM_API}${path}`, {
+    ...opts,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...(opts.headers || {}),
+    },
+  });
+  return res.json();
+}
+
+async function admLoadAll() {
+  await Promise.all([
+    admLoadStats(),
+    admLoadEvents(),
+    admLoadUsers(),
+    admLoadRegs(),
+  ]);
+}
+
+// ── STATS ──
+async function admLoadStats() {
+  const data = await admApi("/admin/stats");
+  if (!data.success) return;
+  admStats = data.data;
+  const o = data.data.overview;
+  document.getElementById("adm-stat-users").textContent = o.totalUsers;
+  document.getElementById("adm-stat-events").textContent = o.totalEvents;
+  document.getElementById("adm-stat-regs").textContent = o.totalRegistrations;
+  document.getElementById("adm-stat-avg").textContent =
+    o.averageRegistrationsPerEvent;
+  document.getElementById("adm-popular-body").innerHTML = (
+    data.data.popularEvents || []
+  )
+    .map(
+      (e) =>
+        `<tr><td>${e.title}</td><td><span class="adm-badge adm-badge-blue">${e.category}</span></td><td>${e.registered}</td><td>${e.capacity}</td></tr>`,
+    )
+    .join("");
+}
+
+// ── EVENTS ──
+async function admLoadEvents() {
+  const data = await admApi("/admin/events?limit=100");
+  if (!data.success) return;
+  admEvents = data.data;
+  admRenderEvents(admEvents);
+}
+
+function admRenderEvents(events) {
+  document.getElementById("adm-events-body").innerHTML = events
+    .map(
+      (e) => `
+    <tr>
+      <td>${e.title}</td>
+      <td><span class="adm-badge adm-badge-blue">${e.category}</span></td>
+      <td>${new Date(e.date).toLocaleDateString()}</td>
+      <td>${e.registered}/${e.capacity}</td>
+      <td><span class="adm-badge ${e.isActive ? "adm-badge-green" : "adm-badge-red"}">${e.isActive ? "Active" : "Inactive"}</span></td>
+      <td style="display:flex;gap:6px">
+        <button class="adm-btn-edit" onclick="admOpenEventModal('${e._id}')">Edit</button>
+        <button class="adm-btn-danger" onclick="admDeleteEvent('${e._id}')">Delete</button>
+      </td>
+    </tr>`,
+    )
+    .join("");
+}
+
+function admFilterEvents(q) {
+  admRenderEvents(
+    admEvents.filter((e) => e.title.toLowerCase().includes(q.toLowerCase())),
+  );
+}
+
+function admOpenEventModal(id) {
+  document.getElementById("adm-modal-title").textContent = id
+    ? "Edit Event"
+    : "Add Event";
+  document.getElementById("adm-ev-id").value = id || "";
+  if (id) {
+    const e = admEvents.find((x) => x._id === id);
+    if (e) {
+      document.getElementById("adm-ev-title").value = e.title;
+      document.getElementById("adm-ev-cat").value = e.category;
+      document.getElementById("adm-ev-dept").value = e.department;
+      document.getElementById("adm-ev-diff").value = e.difficulty;
+      document.getElementById("adm-ev-cap").value = e.capacity;
+      document.getElementById("adm-ev-date").value = e.date
+        ? e.date.split("T")[0]
+        : "";
+      document.getElementById("adm-ev-time").value = e.time;
+      document.getElementById("adm-ev-loc").value = e.location;
+      document.getElementById("adm-ev-org").value = e.organizer;
+      document.getElementById("adm-ev-price").value = e.price || "";
+      document.getElementById("adm-ev-tags").value = (e.tags || []).join(", ");
+      document.getElementById("adm-ev-desc").value = e.description;
+      document.getElementById("adm-ev-trending").checked =
+        e.popularity === "trending";
+    }
+  } else {
+    [
+      "adm-ev-title",
+      "adm-ev-cap",
+      "adm-ev-date",
+      "adm-ev-time",
+      "adm-ev-loc",
+      "adm-ev-org",
+      "adm-ev-price",
+      "adm-ev-tags",
+      "adm-ev-desc",
+    ].forEach((i) => (document.getElementById(i).value = ""));
+    document.getElementById("adm-ev-trending").checked = false;
+  }
+  document.getElementById("adm-event-modal").style.display = "flex";
+}
+
+function admCloseEventModal() {
+  document.getElementById("adm-event-modal").style.display = "none";
+}
+
+async function admSaveEvent() {
+  const id = document.getElementById("adm-ev-id").value;
+  const body = {
+    title: document.getElementById("adm-ev-title").value,
+    category: document.getElementById("adm-ev-cat").value,
+    department: document.getElementById("adm-ev-dept").value,
+    difficulty: document.getElementById("adm-ev-diff").value,
+    capacity: parseInt(document.getElementById("adm-ev-cap").value),
+    date: document.getElementById("adm-ev-date").value,
+    time: document.getElementById("adm-ev-time").value,
+    location: document.getElementById("adm-ev-loc").value,
+    organizer: document.getElementById("adm-ev-org").value,
+    price: document.getElementById("adm-ev-price").value || "Free",
+    tags: document
+      .getElementById("adm-ev-tags")
+      .value.split(",")
+      .map((t) => t.trim())
+      .filter(Boolean),
+    description: document.getElementById("adm-ev-desc").value,
+    popularity: document.getElementById("adm-ev-trending").checked
+      ? "trending"
+      : "normal",
+  };
+  const data = await admApi(id ? `/admin/events/${id}` : "/admin/events", {
+    method: id ? "PUT" : "POST",
+    body: JSON.stringify(body),
+  });
+  if (data.success) {
+    admToast("Event saved");
+    admCloseEventModal();
+    admLoadEvents();
+    admLoadStats();
+  } else admToast(data.message || "Error", true);
+}
+
+async function admDeleteEvent(id) {
+  if (!confirm("Delete this event?")) return;
+  const data = await admApi(`/admin/events/${id}`, { method: "DELETE" });
+  if (data.success) {
+    admToast("Event deleted");
+    admLoadEvents();
+    admLoadStats();
+  } else admToast(data.message || "Error", true);
+}
+
+// ── USERS ──
+async function admLoadUsers() {
+  const data = await admApi("/admin/users?limit=100");
+  if (!data.success) return;
+  admUsers = data.data;
+  admRenderUsers(admUsers);
+}
+
+function admRenderUsers(users) {
+  document.getElementById("adm-users-body").innerHTML = users
+    .map(
+      (u) => `
+    <tr>
+      <td>${u.name}</td><td>${u.email}</td><td>${u.department || "—"}</td>
+      <td>
+        <select class="adm-input" style="width:auto;padding:4px 8px" onchange="admChangeRole('${u._id}',this.value)">
+          <option ${u.role === "student" ? "selected" : ""} value="student">student</option>
+          <option ${u.role === "admin" ? "selected" : ""} value="admin">admin</option>
+          <option ${u.role === "organizer" ? "selected" : ""} value="organizer">organizer</option>
+        </select>
+      </td>
+      <td><span class="adm-badge ${u.isActive ? "adm-badge-green" : "adm-badge-red"}">${u.isActive ? "Active" : "Inactive"}</span></td>
+      <td><button class="adm-btn-danger" onclick="admDeleteUser('${u._id}')">Delete</button></td>
+    </tr>`,
+    )
+    .join("");
+}
+
+function admFilterUsers(q) {
+  admRenderUsers(
+    admUsers.filter(
+      (u) =>
+        u.name.toLowerCase().includes(q.toLowerCase()) ||
+        u.email.toLowerCase().includes(q.toLowerCase()),
+    ),
+  );
+}
+
+async function admChangeRole(id, role) {
+  const data = await admApi(`/admin/users/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ role }),
+  });
+  if (data.success) admToast("Role updated");
+  else admToast(data.message || "Error", true);
+}
+
+async function admDeleteUser(id) {
+  if (!confirm("Deactivate this user?")) return;
+  const data = await admApi(`/admin/users/${id}`, { method: "DELETE" });
+  if (data.success) {
+    admToast("User deactivated");
+    admLoadUsers();
+  } else admToast(data.message || "Error", true);
+}
+
+// ── REGISTRATIONS ──
+async function admLoadRegs() {
+  const data = await admApi("/admin/registrations?limit=100");
+  if (!data.success) return;
+  admRegs = data.data;
+  document.getElementById("adm-regs-body").innerHTML = admRegs
+    .map(
+      (r) => `
+    <tr>
+      <td><code style="color:#38BDF8;font-size:.8rem">${r.ticketId}</code></td>
+      <td>${r.fullName}</td>
+      <td>${r.event?.title || "—"}</td>
+      <td>${r.event?.date ? new Date(r.event.date).toLocaleDateString() : "—"}</td>
+      <td><span class="adm-badge ${r.status === "confirmed" ? "adm-badge-green" : r.status === "cancelled" ? "adm-badge-red" : "adm-badge-yellow"}">${r.status}</span></td>
+      <td>${r.status !== "cancelled" ? `<button class="adm-btn-danger" onclick="admCancelReg('${r._id}')">Cancel</button>` : "—"}</td>
+    </tr>`,
+    )
+    .join("");
+}
+
+async function admCancelReg(id) {
+  if (!confirm("Cancel this registration?")) return;
+  const data = await admApi(`/admin/registrations/${id}/cancel`, {
+    method: "PUT",
+  });
+  if (data.success) {
+    admToast("Cancelled");
+    admLoadRegs();
+    admLoadStats();
+  } else admToast(data.message || "Error", true);
+}
+
+function admExport() {
+  const blob = new Blob([JSON.stringify(admRegs, null, 2)], {
+    type: "application/json",
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "registrations.json";
+  a.click();
+}
+
+// ── ANALYTICS ──
+function admRenderAnalytics() {
+  if (!admStats.popularEvents) return;
+  const maxVal = (arr) =>
+    Math.max(...arr.map((x) => x.registered || x.count || 1), 1);
+
+  document.getElementById("adm-chart-popular").innerHTML = (
+    admStats.popularEvents || []
+  )
+    .map(
+      (e) =>
+        `<div class="adm-bar-row"><div class="adm-bar-label">${e.title.substring(0, 12)}…</div>
+    <div class="adm-bar-track"><div class="adm-bar-fill" style="width:${Math.round((e.registered / maxVal(admStats.popularEvents)) * 100)}%"></div></div>
+    <div class="adm-bar-count">${e.registered}</div></div>`,
+    )
+    .join("");
+
+  document.getElementById("adm-chart-cat").innerHTML = (
+    admStats.categoryStats || []
+  )
+    .map(
+      (c) =>
+        `<div class="adm-bar-row"><div class="adm-bar-label">${c._id}</div>
+    <div class="adm-bar-track"><div class="adm-bar-fill" style="width:${Math.round((c.count / maxVal(admStats.categoryStats)) * 100)}%;background:#818CF8"></div></div>
+    <div class="adm-bar-count">${c.count}</div></div>`,
+    )
+    .join("");
+
+  document.getElementById("adm-chart-monthly").innerHTML = (
+    admStats.monthlyRegistrations || []
+  )
+    .slice()
+    .reverse()
+    .map(
+      (m) =>
+        `<div class="adm-bar-row"><div class="adm-bar-label">${m._id.year}/${m._id.month}</div>
+    <div class="adm-bar-track"><div class="adm-bar-fill" style="width:${Math.round((m.count / maxVal(admStats.monthlyRegistrations)) * 100)}%;background:#34D399"></div></div>
+    <div class="adm-bar-count">${m.count}</div></div>`,
+    )
+    .join("");
+}
+
+// ── TOAST ──
+function admToast(msg, isErr = false) {
+  let t = document.getElementById("adm-toast");
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "adm-toast";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.className = "show" + (isErr ? " err" : "");
+  setTimeout(() => (t.className = ""), 3000);
+}
+
+// On page load — restore admin button if already logged in as admin
+if (currentUser && currentUser.role === "admin") {
+  const adminBtn = document.getElementById("adminPanelBtn");
+  if (adminBtn) adminBtn.style.display = "inline-block";
+}
