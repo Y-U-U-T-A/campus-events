@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Database Connection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0B0F1A;
+            color: #E5E7EB;
+        }
+        .test-box {
+            background: #111827;
+            border: 2px solid #38BDF8;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .success { border-color: #22c55e; }
+        .error { border-color: #ef4444; }
+        button {
+            background: #38BDF8;
+            color: #0B0F1A;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover { background: #22D3EE; }
+        pre {
+            background: #0B0F1A;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .status { font-size: 24px; margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Database Connection Test</h1>
+    <p>This page will test if your frontend can connect to the MongoDB backend.</p>
+
+    <div class="test-box" id="backendTest">
+        <h2><span class="status">⏳</span> Test 1: Backend Server</h2>
+        <p>Testing connection to http://localhost:5000/api/health</p>
+        <div id="backendResult">Testing...</div>
+    </div>
+
+    <div class="test-box" id="eventsTest">
+        <h2><span class="status">⏳</span> Test 2: Load Events</h2>
+        <p>Testing if events can be loaded from database</p>
+        <div id="eventsResult">Waiting for backend test...</div>
+    </div>
+
+    <div class="test-box" id="loginTest">
+        <h2><span class="status">⏳</span> Test 3: Login System</h2>
+        <p>Testing authentication with admin account</p>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <div class="test-box" id="registrationTest">
+        <h2><span class="status">⏳</span> Test 4: Event Registration</h2>
+        <p>Testing event registration (requires login)</p>
+        <button onclick="testRegistration()">Test Registration</button>
+        <div id="registrationResult"></div>
+    </div>
+
+    <hr style="margin: 40px 0; border-color: #38BDF8;">
+
+    <h2>📋 Summary</h2>
+    <div id="summary" class="test-box">
+        <p>Run all tests to see summary...</p>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+        let authToken = null;
+        let testResults = {
+            backend: false,
+            events: false,
+            login: false,
+            registration: false
+        };
+
+        // Test 1: Backend Server
+        async function testBackend() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                
+                if (data.status === 'OK') {
+                    document.getElementById('backendTest').classList.add('success');
+                    document.querySelector('#backendTest .status').textContent = '✅';
+                    document.getElementById('backendResult').innerHTML = `
+                        <strong>✅ Success!</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    testResults.backend = true;
+                    testEvents();
+                } else {
+                    throw new Error('Backend returned unexpected response');
+                }
+            } catch (error) {
+                document.getElementById('backendTest').classList.add('error');
+                document.querySelector('#backendTest .status').textContent = '❌';
+                document.getElementById('backendResult').innerHTML = `
+                    <strong>❌ Failed!</strong>
+                    <p>Error: ${error.message}</p>
+                    <p><strong>Fix:</strong> Make sure backend is running with <code>npm run dev</code></p>
+                `;
+                testResults.backend = false;
+            }
+        }
+
+        // Test 2: Load Events
+        async function testEvents() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/events`);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    document.getElementById('eventsTest').classList.add('success');
+                    document.querySelector('#eventsTest .status').textContent = '✅';
+                    document.getElementById('eventsResult').innerHTML = `
+                        <strong>✅ Success!</strong>
+                        <p>Loaded ${data.count} events from database</p>
+                        <pre>${JSON.stringify(data.data[0], null, 2)}</pre>
+                    `;
+                    testResults.events = true;
+                } else {
+                    throw new Error('No events found in database');
+                }
+            } catch (error) {
+                document.getElementById('eventsTest').classList.add('error');
+                document.querySelector('#eventsTest .status').textContent = '❌';
+                document.getElementById('eventsResult').innerHTML = `
+                    <strong>❌ Failed!</strong>
+                    <p>Error: ${error.message}</p>
+                    <p><strong>Fix:</strong> Run <code>npm run seed</code> to add sample data</p>
+                `;
+                testResults.events = false;
+            }
+        }
+
+        // Test 3: Login
+        async function testLogin() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@campus.edu',
+                        password: 'admin123'
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.success && data.data.token) {
+                    authToken = data.data.token;
+                    document.getElementById('loginTest').classList.add('success');
+                    document.querySelector('#loginTest .status').textContent = '✅';
+                    document.getElementById('loginResult').innerHTML = `
+                        <strong>✅ Success!</strong>
+                        <p>Logged in as: ${data.data.user.name}</p>
+                        <p>Role: ${data.data.user.role}</p>
+                        <p>Token: ${authToken.substring(0, 20)}...</p>
+                    `;
+                    testResults.login = true;
+                } else {
+                    throw new Error(data.message || 'Login failed');
+                }
+            } catch (error) {
+                document.getElementById('loginTest').classList.add('error');
+                document.querySelector('#loginTest .status').textContent = '❌';
+                document.getElementById('loginResult').innerHTML = `
+                    <strong>❌ Failed!</strong>
+                    <p>Error: ${error.message}</p>
+                    <p><strong>Fix:</strong> Make sure database is seeded with <code>npm run seed</code></p>
+                `;
+                testResults.login = false;
+            }
+            updateSummary();
+        }
+
+        // Test 4: Registration
+        async function testRegistration() {
+            if (!authToken) {
+                alert('Please run Test 3 (Login) first!');
+                return;
+            }
+
+            try {
+                // First get an event
+                const eventsResponse = await fetch(`${API_BASE_URL}/events`);
+                const eventsData = await eventsResponse.json();
+                const testEvent = eventsData.data[0];
+
+                // Try to register
+                const response = await fetch(`${API_BASE_URL}/registrations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        eventId: testEvent._id,
+                        fullName: 'Test User',
+                        email: 'test@test.com',
+                        phoneNumber: '1234567890',
+                        department: 'csit'
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('registrationTest').classList.add('success');
+                    document.querySelector('#registrationTest .status').textContent = '✅';
+                    document.getElementById('registrationResult').innerHTML = `
+                        <strong>✅ Success!</strong>
+                        <p>Registered for: ${testEvent.title}</p>
+                        <p>Ticket ID: ${data.data.ticketId}</p>
+                        <pre>${JSON.stringify(data.data.registration, null, 2)}</pre>
+                    `;
+                    testResults.registration = true;
+                } else {
+                    throw new Error(data.message || 'Registration failed');
+                }
+            } catch (error) {
+                document.getElementById('registrationTest').classList.add('error');
+                document.querySelector('#registrationTest .status').textContent = '❌';
+                document.getElementById('registrationResult').innerHTML = `
+                    <strong>❌ Failed!</strong>
+                    <p>Error: ${error.message}</p>
+                `;
+                testResults.registration = false;
+            }
+            updateSummary();
+        }
+
+        // Update summary
+        function updateSummary() {
+            const passed = Object.values(testResults).filter(r => r).length;
+            const total = Object.keys(testResults).length;
+            
+            document.getElementById('summary').innerHTML = `
+                <h3>Test Results: ${passed}/${total} Passed</h3>
+                <ul>
+                    <li>${testResults.backend ? '✅' : '❌'} Backend Server Connection</li>
+                    <li>${testResults.events ? '✅' : '❌'} Load Events from Database</li>
+                    <li>${testResults.login ? '✅' : '❌'} User Authentication</li>
+                    <li>${testResults.registration ? '✅' : '❌'} Event Registration</li>
+                </ul>
+                ${passed === total ? 
+                    '<p style="color: #22c55e; font-size: 20px;">🎉 All tests passed! Your database is fully connected!</p>' :
+                    '<p style="color: #fbbf24;">⚠️ Some tests failed. Check the errors above and follow the fix instructions.</p>'
+                }
+            `;
+        }
+
+        // Run tests on page load
+        window.onload = () => {
+            testBackend();
+        };
+    </script>
+</body>
+</html>

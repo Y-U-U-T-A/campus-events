@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Event Dates</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0B0F1A;
+            color: #E5E7EB;
+        }
+        .event {
+            background: #1F2937;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            border: 1px solid #374151;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .future {
+            background: #10B981;
+            color: white;
+        }
+        .passed {
+            background: #EF4444;
+            color: white;
+        }
+        h1 {
+            color: #38BDF8;
+        }
+        .info {
+            background: #374151;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🗓️ Event Date Tester</h1>
+    
+    <div class="info">
+        <strong>Current Date/Time:</strong> <span id="currentTime"></span>
+    </div>
+    
+    <div id="events"></div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        // Display current time
+        const now = new Date();
+        document.getElementById('currentTime').textContent = now.toString();
+
+        // Fetch and display events
+        async function testEvents() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/events`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const eventsContainer = document.getElementById('events');
+                    
+                    data.data.forEach(event => {
+                        const eventDate = event.date.split('T')[0];
+                        const eventTime = event.time;
+                        
+                        // Parse the date
+                        const dateParts = eventDate.split('-');
+                        const timeParts = eventTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                        
+                        let hours = parseInt(timeParts[1]);
+                        const minutes = parseInt(timeParts[2]);
+                        const period = timeParts[3].toUpperCase();
+                        
+                        if (period === 'PM' && hours !== 12) {
+                            hours += 12;
+                        } else if (period === 'AM' && hours === 12) {
+                            hours = 0;
+                        }
+                        
+                        const eventDateTime = new Date(
+                            parseInt(dateParts[0]),
+                            parseInt(dateParts[1]) - 1,
+                            parseInt(dateParts[2]),
+                            hours,
+                            minutes
+                        );
+                        
+                        const diff = eventDateTime - now;
+                        const isPassed = diff < 0;
+                        const days = Math.floor(Math.abs(diff) / (1000 * 60 * 60 * 24));
+                        
+                        const eventDiv = document.createElement('div');
+                        eventDiv.className = 'event';
+                        eventDiv.innerHTML = `
+                            <h3>${event.title}</h3>
+                            <p><strong>Database Date:</strong> ${event.date}</p>
+                            <p><strong>Formatted Date:</strong> ${eventDate}</p>
+                            <p><strong>Time:</strong> ${eventTime}</p>
+                            <p><strong>Parsed DateTime:</strong> ${eventDateTime.toString()}</p>
+                            <p><strong>Difference (ms):</strong> ${diff}</p>
+                            <p><strong>Days ${isPassed ? 'ago' : 'from now'}:</strong> ${days}</p>
+                            <div class="status ${isPassed ? 'passed' : 'future'}">
+                                ${isPassed ? '❌ Event has passed' : `✅ Starts in ${days} days`}
+                            </div>
+                        `;
+                        eventsContainer.appendChild(eventDiv);
+                    });
+                }
+            } catch (error) {
+                document.getElementById('events').innerHTML = `
+                    <div class="event" style="background: #EF4444;">
+                        <h3>Error loading events</h3>
+                        <p>${error.message}</p>
+                        <p>Make sure your backend server is running on port 5000</p>
+                    </div>
+                `;
+            }
+        }
+
+        testEvents();
+    </script>
+</body>
+</html>

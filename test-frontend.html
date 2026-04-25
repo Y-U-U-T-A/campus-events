@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Frontend</title>
+</head>
+<body>
+    <h1>Testing Event Loading</h1>
+    <div id="status">Loading...</div>
+    <div id="events"></div>
+
+    <script>
+        async function testAPI() {
+            const statusDiv = document.getElementById('status');
+            const eventsDiv = document.getElementById('events');
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/events');
+                const data = await response.json();
+                
+                statusDiv.innerHTML = `✅ Success! Loaded ${data.count} events`;
+                statusDiv.style.color = 'green';
+                
+                if (data.data && data.data.length > 0) {
+                    eventsDiv.innerHTML = '<h2>Events:</h2>' + 
+                        data.data.map(event => `
+                            <div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0;">
+                                <h3>${event.title}</h3>
+                                <p>Category: ${event.category}</p>
+                                <p>Date: ${new Date(event.date).toLocaleDateString()}</p>
+                                <p>Location: ${event.location}</p>
+                            </div>
+                        `).join('');
+                } else {
+                    eventsDiv.innerHTML = '<p>No events found</p>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `❌ Error: ${error.message}`;
+                statusDiv.style.color = 'red';
+                console.error('Error:', error);
+            }
+        }
+        
+        testAPI();
+    </script>
+</body>
+</html>

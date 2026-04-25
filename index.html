@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Events - Discover Amazing Events</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="frontend/config.js"></script>
+  </head>
+  <body class="space-theme">
+    <!-- Floating Space Background -->
+    <div class="space-background">
+      <div class="floating-icon">🚀</div>
+      <div class="floating-icon">⭐</div>
+      <div class="floating-icon">🪐</div>
+      <div class="floating-icon">🌟</div>
+      <div class="floating-icon">🛰️</div>
+      <div class="floating-icon">�</div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="space-navbar">
+      <div class="nav-container">
+        <div class="nav-logo">
+          <h2>🌌 Campus Events</h2>
+        </div>
+        <div class="nav-search">
+          <input
+            type="text"
+            id="navSearchInput"
+            placeholder="🔍 Search events..."
+          />
+        </div>
+        <div class="nav-actions">
+          <button id="themeToggle" class="nav-btn glow-btn">
+            🌙 Dark Mode
+          </button>
+          <button id="loginBtn" class="nav-btn glow-btn">👨‍🚀 Login</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Space Dashboard Strip -->
+    <div class="space-dashboard-strip">
+      <div class="dashboard-strip-container">
+        <div class="stat-item">
+          <span class="stat-icon">🛰️</span>
+          <span class="stat-number" id="liveEventsCount">0</span>
+          <span class="stat-label">Live Events</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-icon">🚀</span>
+          <span class="stat-number" id="launchingSoonCount">0</span>
+          <span class="stat-label">Launching Soon</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-icon">🌟</span>
+          <span class="stat-number" id="popularCount">0</span>
+          <span class="stat-label">Popular</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-icon">🪐</span>
+          <span class="stat-number" id="matchesCount">0</span>
+          <span class="stat-label">Your Matches</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="space-hero">
+      <div class="hero-content">
+        <h1>Discover Amazing Campus Events</h1>
+        <p>Never Miss an Opportunity Again</p>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-number" id="heroEventsCount">0</span>
+            <span class="stat-text">Events This Week</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="heroStudentsCount">0</span>
+            <span class="stat-text">Students Registered</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="heroDepartmentsCount">0</span>
+            <span class="stat-text">Departments</span>
+          </div>
+        </div>
+        <button id="heroBrowseBtn" class="hero-cta glow-btn">
+          🚀 Browse Events
+        </button>
+      </div>
+    </section>
+
+    <main>
+      <!-- Enhanced Filter Control Panel -->
+      <section class="space-filters">
+        <h2>🔭 Event Filters</h2>
+        <div class="filter-controls">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="🔍 Search events..."
+          />
+
+          <select id="categoryFilter" class="space-select">
+            <option value="">All Categories</option>
+            <option value="academic">📚 Academic</option>
+            <option value="social">🎉 Social</option>
+            <option value="sports">⚽ Sports</option>
+            <option value="career">💼 Career</option>
+            <option value="arts">🎨 Arts</option>
+            <option value="tech">💻 Technology</option>
+          </select>
+
+          <select id="departmentFilter" class="space-select">
+            <option value="">All Departments</option>
+            <option value="csit">🖥️ Computer Science</option>
+            <option value="mechanical">⚙️ Mechanical Engineering</option>
+            <option value="cultural">🎭 Cultural Affairs</option>
+            <option value="sports">🏃 Sports Department</option>
+            <option value="business">📈 Business Studies</option>
+          </select>
+
+          <select id="difficultyFilter" class="space-select">
+            <option value="">All Skill Levels</option>
+            <option value="beginner">🟢 Beginner</option>
+            <option value="intermediate">🟡 Intermediate</option>
+            <option value="advanced">🔴 Advanced</option>
+          </select>
+
+          <input type="date" id="dateFilter" class="space-input" />
+
+          <select id="sortBy" class="space-select">
+            <option value="date">Sort by Date</option>
+            <option value="popularity">Sort by Popularity</option>
+            <option value="availability">Sort by Availability</option>
+            <option value="trending">Sort by Trending</option>
+          </select>
+
+          <button id="clearFilters" class="space-btn glow-btn">
+            Clear Filters
+          </button>
+        </div>
+
+        <div class="view-toggle">
+          <button id="gridViewBtn" class="view-btn active glow-btn">
+            🌌 Grid View
+          </button>
+          <button id="calendarViewBtn" class="view-btn glow-btn">
+            📅 Calendar View
+          </button>
+        </div>
+      </section>
+
+      <!-- Space Dashboard -->
+      <section class="space-dashboard">
+        <h2>🎯 Your Dashboard</h2>
+        <div class="dashboard-stats">
+          <div class="stat-card">
+            <span class="stat-number" id="registeredCount">0</span>
+            <span class="stat-label">Events Joined</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number" id="savedCount">0</span>
+            <span class="stat-label">Saved Events</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number" id="remindersCount">0</span>
+            <span class="stat-label">Reminders</span>
+          </div>
+        </div>
+        <div class="dashboard-actions">
+          <button id="viewMyEvents" class="dashboard-btn glow-btn">
+            🚀 My Events
+          </button>
+          <button id="viewSavedEvents" class="dashboard-btn glow-btn">
+            ❤️ Saved Events
+          </button>
+          <button id="viewReminders" class="dashboard-btn glow-btn">
+            🔔 Reminders
+          </button>
+        </div>
+      </section>
+
+      <!-- Skill Constellation Section -->
+      <section class="skill-constellation">
+        <h2>🌟 Your Interests</h2>
+        <div class="constellation-selector">
+          <p>Select your interests to discover matching events:</p>
+          <div class="constellation-stars">
+            <button class="star-skill" data-interest="tech">
+              💻 Technology
+            </button>
+            <button class="star-skill" data-interest="sports">⚽ Sports</button>
+            <button class="star-skill" data-interest="arts">🎨 Arts</button>
+            <button class="star-skill" data-interest="career">💼 Career</button>
+            <button class="star-skill" data-interest="academic">
+              📚 Academic
+            </button>
+            <button class="star-skill" data-interest="social">🎉 Social</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Smart "Your Orbit" Section -->
+      <section class="your-orbit">
+        <h2>⭐ Recommended For You</h2>
+        <div id="recommendedEvents" class="space-events-grid"></div>
+      </section>
+
+      <!-- Supernova Events Strip -->
+      <section class="supernova-strip">
+        <h2>🔥 Trending Events</h2>
+        <div id="trendingEvents" class="trending-events-slider"></div>
+      </section>
+
+      <!-- Event Galaxies Display -->
+      <section class="event-galaxies">
+        <h2>🪐 All Events</h2>
+        <div id="eventsContainer" class="space-events-grid"></div>
+        <div
+          id="calendarContainer"
+          class="space-calendar-view"
+          style="display: none"
+        ></div>
+      </section>
+
+      <!-- Reviews Orbit Slider -->
+      <section class="reviews-orbit">
+        <h2>💬 Student Reviews</h2>
+        <div class="orbit-slider-container">
+          <div class="orbit-slider" id="reviewsOrbit">
+            <div class="review-card active">
+              <div class="review-content">
+                <p>
+                  "The AI Workshop was absolutely mind-blowing! The hands-on
+                  approach made complex concepts easy to understand."
+                </p>
+                <div class="reviewer">
+                  <strong>Sarah Chen</strong>
+                  <span>Computer Science Department</span>
+                </div>
+              </div>
+            </div>
+            <div class="review-card">
+              <div class="review-content">
+                <p>
+                  "Zero-G Basketball Championship was the most exciting event
+                  I've ever attended. The energy was incredible!"
+                </p>
+                <div class="reviewer">
+                  <strong>Mike Rodriguez</strong>
+                  <span>Sports Department</span>
+                </div>
+              </div>
+            </div>
+            <div class="review-card">
+              <div class="review-content">
+                <p>
+                  "The Career Expo connected me with my dream job at SpaceX.
+                  Life-changing experience!"
+                </p>
+                <div class="reviewer">
+                  <strong>Emma Watson</strong>
+                  <span>Engineering Department</span>
+                </div>
+              </div>
+            </div>
+            <div class="review-card">
+              <div class="review-content">
+                <p>
+                  "Digital Nebula Art Exhibition showcased incredible talent.
+                  The holographic demos were out of this world!"
+                </p>
+                <div class="reviewer">
+                  <strong>Alex Kim</strong>
+                  <span>Arts Department</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Enhanced Modals -->
+    <!-- Event Registration Modal -->
+    <div id="registrationModal" class="modal">
+      <div class="modal-container">
+        <div class="modal-content scrollable-modal">
+          <span class="close">&times;</span>
+          <div class="modal-header">
+            <h2>📝 Register for Event</h2>
+          </div>
+          <div class="modal-body">
+            <div id="modalEventDetails"></div>
+            <form id="registrationForm" autocomplete="on">
+              <div class="auth-form-row">
+                <div class="auth-form-group">
+                  <label class="auth-label" for="studentName">Full Name</label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">👤</span>
+                    <input
+                      type="text"
+                      id="studentName"
+                      name="fullName"
+                      placeholder="Your full name"
+                      required
+                      autocomplete="name"
+                    />
+                  </div>
+                </div>
+                <div class="auth-form-group">
+                  <label class="auth-label" for="studentEmail"
+                    >Email Address</label
+                  >
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">📧</span>
+                    <input
+                      type="email"
+                      id="studentEmail"
+                      name="email"
+                      placeholder="your@email.com"
+                      required
+                      autocomplete="email"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="auth-form-row">
+                <div class="auth-form-group">
+                  <label class="auth-label" for="studentPhone"
+                    >Phone Number</label
+                  >
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">📱</span>
+                    <input
+                      type="tel"
+                      id="studentPhone"
+                      name="phone"
+                      placeholder="Optional"
+                      autocomplete="tel"
+                    />
+                  </div>
+                </div>
+                <div class="auth-form-group">
+                  <label class="auth-label" for="studentDepartment"
+                    >Department</label
+                  >
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">🏢</span>
+                    <select id="studentDepartment" name="department">
+                      <option value="">Select department</option>
+                      <option value="csit">Computer Science & IT</option>
+                      <option value="mechanical">Mechanical Engineering</option>
+                      <option value="business">Business Studies</option>
+                      <option value="arts">Arts & Literature</option>
+                      <option value="cultural">Cultural Affairs</option>
+                      <option value="sports">Sports</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label" for="specialRequests"
+                  >Special Requests</label
+                >
+                <div class="auth-input-wrap">
+                  <span
+                    class="auth-input-icon"
+                    style="align-self: flex-start; padding-top: 0.9rem"
+                    >📝</span
+                  >
+                  <textarea
+                    id="specialRequests"
+                    name="specialRequests"
+                    placeholder="Any special requests or dietary restrictions (optional)"
+                    rows="3"
+                  ></textarea>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="submit"
+              form="registrationForm"
+              class="auth-submit-btn"
+            >
+              <span>Register Now</span> <span class="btn-arrow">🚀</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ticket Modal -->
+    <div id="ticketModal" class="modal">
+      <div class="modal-container">
+        <div class="modal-content ticket-modal">
+          <span class="close">&times;</span>
+          <div class="modal-body">
+            <div id="ticketContent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Events Modal -->
+    <div id="myEventsModal" class="modal">
+      <div class="modal-container">
+        <div class="modal-content large-modal">
+          <span class="close">&times;</span>
+          <div class="modal-header">
+            <h2>My Events</h2>
+          </div>
+          <div class="modal-body">
+            <div class="tabs">
+              <button class="tab-btn active" data-tab="registered">
+                📝 Registered Events
+              </button>
+              <button class="tab-btn" data-tab="saved">❤️ Saved Events</button>
+              <button class="tab-btn" data-tab="reminders">🔔 Reminders</button>
+            </div>
+            <div id="myEventsContent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Event Details Modal -->
+    <div id="eventDetailsModal" class="modal">
+      <div class="modal-container">
+        <div class="modal-content large-modal">
+          <span class="close">&times;</span>
+          <div class="modal-body">
+            <div id="eventDetailsContent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login / Register Modal -->
+    <div id="loginModal" class="modal">
+      <div class="modal-container">
+        <div class="modal-content auth-modal">
+          <span class="close">&times;</span>
+
+          <!-- Auth Tabs -->
+          <div class="auth-tabs">
+            <button
+              class="auth-tab-btn active"
+              id="showLoginTab"
+              onclick="switchAuthTab('login')"
+            >
+              � Login
+            </button>
+            <button
+              class="auth-tab-btn"
+              id="showRegisterTab"
+              onclick="switchAuthTab('register')"
+            >
+              🚀 Register
+            </button>
+          </div>
+
+          <!-- LOGIN PANEL -->
+          <div id="loginPanel">
+            <div class="auth-modal-header">
+              <div class="auth-icon">🌌</div>
+              <h2>Welcome Back</h2>
+              <p>Sign in to your campus account</p>
+            </div>
+            <div class="auth-modal-body">
+              <form id="loginForm" autocomplete="on">
+                <div class="auth-form-group">
+                  <label class="auth-label" for="loginUsername"
+                    >Email Address</label
+                  >
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">📧</span>
+                    <input
+                      type="email"
+                      id="loginUsername"
+                      name="email"
+                      placeholder="your@email.com"
+                      required
+                      autocomplete="email"
+                    />
+                  </div>
+                </div>
+                <div class="auth-form-group">
+                  <label class="auth-label" for="loginPassword">Password</label>
+                  <div class="auth-input-wrap">
+                    <span class="auth-input-icon">🔒</span>
+                    <input
+                      type="password"
+                      id="loginPassword"
+                      name="password"
+                      placeholder="Enter your password"
+                      required
+                      autocomplete="current-password"
+                    />
+                  </div>
+                </div>
+                <button type="submit" class="auth-submit-btn">
+                  <span>Login</span> <span class="btn-arrow">→</span>
+                </button>
+              </form>
+              <p class="auth-switch-text">
+                Don't have an account?
+                <a href="#" onclick="switchAuthTab('register')"
+                  >Register here</a
+                >
+              </p>
+            </div>
+          </div>
+
+          <!-- REGISTER PANEL -->
+          <div id="registerPanel" style="display: none">
+            <div class="auth-modal-header">
+              <div class="auth-icon">🚀</div>
+              <h2>Create Account</h2>
+              <p>Join the campus events community</p>
+            </div>
+            <div class="auth-modal-body">
+              <form id="registerForm" autocomplete="on">
+                <div class="auth-form-row">
+                  <div class="auth-form-group">
+                    <label class="auth-label" for="regName">Full Name</label>
+                    <div class="auth-input-wrap">
+                      <span class="auth-input-icon">👤</span>
+                      <input
+                        type="text"
+                        id="regName"
+                        name="name"
+                        placeholder="Your full name"
+                        required
+                        autocomplete="name"
+                      />
+                    </div>
+                  </div>
+                  <div class="auth-form-group">
+                    <label class="auth-label" for="regEmail"
+                      >Email Address</label
+                    >
+                    <div class="auth-input-wrap">
+                      <span class="auth-input-icon">📧</span>
+                      <input
+                        type="email"
+                        id="regEmail"
+                        name="email"
+                        placeholder="your@email.com"
+                        required
+                        autocomplete="email"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div class="auth-form-row">
+                  <div class="auth-form-group">
+                    <label class="auth-label" for="regPhone"
+                      >Phone Number</label
+                    >
+                    <div class="auth-input-wrap">
+                      <span class="auth-input-icon">📱</span>
+                      <input
+                        type="tel"
+                        id="regPhone"
+                        name="phone"
+                        placeholder="Optional"
+                        autocomplete="tel"
+                      />
+                    </div>
+                  </div>
+                  <div class="auth-form-group">
+                    <label class="auth-label" for="regDepartment"
+                      >Department</label
+                    >
+                    <div class="auth-input-wrap">
+                      <span class="auth-input-icon">🏢</span>
+                      <select id="regDepartment" name="department">
+                        <option value="">Select department</option>
+                        <option value="csit">Computer Science & IT</option>
+                        <option value="mechanical">
+                          Mechanical Engineering
+                        </option>
+                        <option value="business">Business Studies</option>
+                        <option value="cultural">Cultural Affairs</option>
+                        <option value="sports">Sports</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="auth-form-row">
+                  <div class="auth-form-group">
+                    <label class="auth-label" for="regPassword">Password</label>
+                    <div class="auth-input-wrap">
+                      <span class="auth-input-icon">🔒</span>
+                      <input
+                        type="password"
+                        id="regPassword"
+                        name="password"
+                        placeholder="Min 6 characters"
+                        required
+                        minlength="6"
+                        autocomplete="new-password"
+                      />
+                    </div>
+                  </div>
+                  <div class="auth-form-group">
+                    <label class="auth-label" for="regConfirmPassword"
+                      >Confirm Password</label
+                    >
+                    <div class="auth-input-wrap">
+                      <span class="auth-input-icon">🔒</span>
+                      <input
+                        type="password"
+                        id="regConfirmPassword"
+                        placeholder="Repeat password"
+                        required
+                        autocomplete="new-password"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <button type="submit" class="auth-submit-btn">
+                  <span>Create Account</span> <span class="btn-arrow">→</span>
+                </button>
+              </form>
+              <p class="auth-switch-text">
+                Already have an account?
+                <a href="#" onclick="switchAuthTab('login')">Login here</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>Campus Events</h3>
+          <p>Connecting students through amazing experiences</p>
+        </div>
+        <div class="footer-section">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="#about">About Us</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li><a href="#help">Help Center</a></li>
+            <li><a href="#privacy">Privacy Policy</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>Contact Info</h4>
+          <p>📧 events@college.edu</p>
+          <p>📞 (555) 123-4567</p>
+          <p>📍 Student Center, Room 101</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Campus Events. Made with ❤️ for students.</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

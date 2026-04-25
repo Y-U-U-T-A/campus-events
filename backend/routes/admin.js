@@ -1,0 +1,26 @@
+const express = require('express');
+const router = express.Router();
+const adminController = require('../controllers/adminController');
+const { protect, authorize } = require('../middleware/auth');
+
+// All routes require authentication and admin role
+router.use(protect);
+router.use(authorize('admin'));
+
+// User management routes
+router.get('/users', adminController.getAllUsers);
+router.delete('/users/:id', adminController.deleteUser);
+router.put('/users/:id/role', adminController.changeUserRole);
+
+// Event management routes
+router.get('/events', adminController.getAllEvents);
+
+// Registration management routes
+router.get('/registrations', adminController.getAllRegistrations);
+router.put('/registrations/:id/cancel', adminController.cancelRegistration);
+router.get('/registrations/export', adminController.exportRegistrations);
+
+// Statistics route
+router.get('/stats', adminController.getStats);
+
+module.exports = router;
