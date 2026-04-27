@@ -25,11 +25,7 @@ async function apiCall(endpoint, options = {}) {
     );
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
     const data = await response.json();
-    if (!response.ok) {
-      throw new Error(
-        data.message || `API request failed (${response.status})`,
-      );
-    }
+    // Return data regardless of status so callers can handle errors themselves
     return data;
   } catch (error) {
     console.error("API Error:", error);
@@ -373,6 +369,8 @@ function updateSkillConstellation() {
   starSkills.forEach((star) => {
     if (userPreferences.interests.includes(star.dataset.interest)) {
       star.classList.add("active");
+    } else {
+      star.classList.remove("active");
     }
   });
 }
@@ -1069,6 +1067,13 @@ async function handleRegister(e) {
       displayRecommendations();
       updateDashboard();
       alert(`Welcome, ${currentUser.name}! Your account has been created. 🚀`);
+    } else {
+      alert(
+        "Registration failed: " +
+          (response.message ||
+            (response.errors && response.errors[0]?.msg) ||
+            "Unknown error"),
+      );
     }
   } catch (error) {
     alert("Registration failed: " + error.message);
