@@ -151,11 +151,22 @@ const seedDatabase = async () => {
     );
     console.log("✅ Connected to MongoDB");
 
-    // Clear existing data
-    await User.deleteMany({});
-    await Event.deleteMany({});
-    await Registration.deleteMany({});
-    console.log("🗑️  Cleared existing data");
+    // Only seed if database is empty — never wipe existing data
+    const existingEvents = await Event.countDocuments();
+    const existingUsers = await User.countDocuments();
+
+    if (existingEvents > 0 || existingUsers > 0) {
+      console.log(
+        `ℹ️  Database already has ${existingUsers} users and ${existingEvents} events. Skipping seed to protect existing data.`,
+      );
+      console.log(
+        "💡 To force reseed, manually clear the collections in MongoDB Atlas first.",
+      );
+      await mongoose.disconnect();
+      return;
+    }
+
+    console.log("🌱 Database is empty, seeding now...");
 
     // Create users one by one so the pre-save password hashing hook runs
     const createdUsers = [];
