@@ -144,6 +144,8 @@ const events = [
 ];
 
 const seedDatabase = async () => {
+  const force = process.argv.includes("--force");
+
   try {
     // Connect to MongoDB
     await mongoose.connect(
@@ -151,22 +153,29 @@ const seedDatabase = async () => {
     );
     console.log("✅ Connected to MongoDB");
 
-    // Only seed if database is empty — never wipe existing data
+    // Only seed if database is empty — unless --force flag is passed
     const existingEvents = await Event.countDocuments();
     const existingUsers = await User.countDocuments();
 
-    if (existingEvents > 0 || existingUsers > 0) {
+    if ((existingEvents > 0 || existingUsers > 0) && !force) {
       console.log(
         `ℹ️  Database already has ${existingUsers} users and ${existingEvents} events. Skipping seed to protect existing data.`,
       );
       console.log(
-        "💡 To force reseed, manually clear the collections in MongoDB Atlas first.",
+        "💡 To force reseed, run: node backend/scripts/seedDatabase.js --force",
       );
       await mongoose.disconnect();
       return;
     }
 
-    console.log("🌱 Database is empty, seeding now...");
+    if (force) {
+      await User.deleteMany({});
+      await Event.deleteMany({});
+      await Registration.deleteMany({});
+      console.log("🗑️  Cleared existing data (--force)");
+    } else {
+      console.log("🌱 Database is empty, seeding now...");
+    }
 
     // Create users one by one so the pre-save password hashing hook runs
     const createdUsers = [];
