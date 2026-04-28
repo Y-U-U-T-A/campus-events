@@ -554,6 +554,10 @@
                         name="name"
                         placeholder="Your full name"
                         required
+                        minlength="2"
+                        maxlength="100"
+                        pattern="[a-zA-Z\s'\-]+"
+                        title="Name can only contain letters and spaces"
                         autocomplete="name"
                       />
                     </div>
@@ -586,7 +590,9 @@
                         type="tel"
                         id="regPhone"
                         name="phone"
-                        placeholder="Optional"
+                        placeholder="Optional (digits only)"
+                        pattern="\d{7,15}"
+                        title="Phone must contain only digits (7–15 digits)"
                         autocomplete="tel"
                       />
                     </div>
@@ -1319,5 +1325,59 @@
       }
     </style>
     <div id="adm-toast"></div>
+
+    <!-- User Toast Notification -->
+    <div
+      id="user-toast"
+      style="
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #1f2937;
+        border: 2px solid #38bdf8;
+        color: #e5e7eb;
+        padding: 14px 20px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        z-index: 9998;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s;
+        pointer-events: none;
+        max-width: 360px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      "
+    >
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span
+          id="user-toast-icon"
+          style="font-size: 1.2rem; flex-shrink: 0"
+        ></span>
+        <span id="user-toast-msg" style="line-height: 1.4"></span>
+      </div>
+    </div>
+    <style>
+      #user-toast.show {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+        pointer-events: all;
+      }
+      #user-toast.success {
+        border-color: #4ade80 !important;
+        background: #14532d !important;
+      }
+      #user-toast.error {
+        border-color: #f87171 !important;
+        background: #7f1d1d !important;
+      }
+      #user-toast.warning {
+        border-color: #fcd34d !important;
+        background: #713f12 !important;
+      }
+      #user-toast.info {
+        border-color: #38bdf8 !important;
+        background: #1e3a5f !important;
+      }
+    </style>
   </body>
 </html>

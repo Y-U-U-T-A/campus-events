@@ -820,7 +820,7 @@ function closeAllModals() {
 function openRegistrationModal(eventId) {
   // Check if user is logged in
   if (!currentUser) {
-    alert("Please login first to register for events! 🔐");
+    showToast("Please login first to register for events! 🔐", "warning");
     openLoginModal();
     return;
   }
@@ -1010,10 +1010,10 @@ async function handleLogin(e) {
       await loadUserData();
       displayRecommendations();
       updateDashboard();
-      alert(`Welcome back, ${currentUser.name}! 🚀`);
+      showToast(`Welcome back, ${currentUser.name}! 🚀`, "success");
     }
   } catch (error) {
-    alert("Login failed: " + error.message);
+    showToast("Login failed: " + error.message, "error");
   } finally {
     submitBtn.textContent = originalText;
     submitBtn.disabled = false;
@@ -1027,7 +1027,7 @@ function logout() {
   updateLoginStatus();
   displayRecommendations();
   updateDashboard();
-  alert("Logged out successfully! 👋");
+  showToast("Logged out successfully! 👋", "info");
 }
 
 async function handleRegister(e) {
@@ -1039,8 +1039,44 @@ async function handleRegister(e) {
   const password = document.getElementById("regPassword").value;
   const confirmPassword = document.getElementById("regConfirmPassword").value;
 
+  // ── Frontend Validations ──
+  // Name: letters and spaces only, min 2 chars
+  if (!name || name.length < 2) {
+    showToast("Full name must be at least 2 characters.", "error");
+    return;
+  }
+  if (!/^[a-zA-Z\s'-]+$/.test(name)) {
+    showToast("Full name can only contain letters and spaces.", "error");
+    return;
+  }
+
+  // Email: valid format — only standard characters allowed
+  if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email)) {
+    showToast("Please enter a valid email address.", "error");
+    return;
+  }
+
+  // Phone: digits only, 7–15 digits (if provided)
+  if (phone && !/^\d{7,15}$/.test(phone)) {
+    showToast("Phone number must contain only digits (7–15 digits).", "error");
+    return;
+  }
+
+  // Password: min 6 chars, at least one letter and one number
+  if (password.length < 6) {
+    showToast("Password must be at least 6 characters.", "error");
+    return;
+  }
+  if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+    showToast(
+      "Password must contain at least one letter and one number.",
+      "error",
+    );
+    return;
+  }
+
   if (password !== confirmPassword) {
-    alert("Passwords do not match!");
+    showToast("Passwords do not match!", "error");
     return;
   }
 
@@ -1073,17 +1109,21 @@ async function handleRegister(e) {
       closeAllModals();
       displayRecommendations();
       updateDashboard();
-      alert(`Welcome, ${currentUser.name}! Your account has been created. 🚀`);
+      showToast(
+        `Welcome, ${currentUser.name}! Your account has been created. 🚀`,
+        "success",
+      );
     } else {
-      alert(
+      showToast(
         "Registration failed: " +
           (response.message ||
-            (response.errors && response.errors[0]?.msg) ||
+            (response.errors && response.errors[0]?.message) ||
             "Unknown error"),
+        "error",
       );
     }
   } catch (error) {
-    alert("Registration failed: " + error.message);
+    showToast("Registration failed: " + error.message, "error");
   } finally {
     if (submitBtn) {
       submitBtn.textContent = originalText || "Create Account →";
@@ -1105,7 +1145,25 @@ async function handleRegistration(e) {
     .value.trim();
 
   if (!eventId) {
-    alert("No event selected. Please try again.");
+    showToast("No event selected. Please try again.", "error");
+    return;
+  }
+
+  // ── Frontend Validations ──
+  if (!fullName || fullName.length < 2) {
+    showToast("Full name must be at least 2 characters.", "error");
+    return;
+  }
+  if (!/^[a-zA-Z\s'-]+$/.test(fullName)) {
+    showToast("Full name can only contain letters and spaces.", "error");
+    return;
+  }
+  if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email)) {
+    showToast("Please enter a valid email address.", "error");
+    return;
+  }
+  if (phoneNumber && !/^\d{7,15}$/.test(phoneNumber)) {
+    showToast("Phone number must contain only digits (7–15 digits).", "error");
     return;
   }
 
@@ -1153,10 +1211,17 @@ async function handleRegistration(e) {
       displayEvents();
       displayRecommendations();
       updateDashboard();
+    } else {
+      showToast(
+        response.message ||
+          (response.errors && response.errors[0]?.message) ||
+          "Registration failed. Please try again.",
+        "error",
+      );
     }
   } catch (error) {
     console.error("Registration error:", error);
-    alert("Registration failed: " + error.message);
+    showToast("Registration failed: " + error.message, "error");
   } finally {
     if (submitBtn) {
       submitBtn.textContent = originalText || "Register Now";
@@ -1230,7 +1295,9 @@ function shareEvent(eventId) {
   } else {
     navigator.clipboard
       .writeText(shareText)
-      .then(() => alert("Event details copied to clipboard! 📋"));
+      .then(() =>
+        showToast("Event details copied to clipboard! 📋", "success"),
+      );
   }
 }
 
@@ -1695,6 +1762,23 @@ function admToast(msg, isErr = false) {
   t.textContent = msg;
   t.className = "show" + (isErr ? " err" : "");
   setTimeout(() => (t.className = ""), 3000);
+}
+
+// User-facing toast — replaces alert() throughout the app
+function showToast(msg, type = "info") {
+  const icons = { success: "✅", error: "❌", warning: "⚠️", info: "ℹ️" };
+  const t = document.getElementById("user-toast");
+  if (!t) {
+    alert(msg);
+    return;
+  }
+  document.getElementById("user-toast-icon").textContent = icons[type] || "ℹ️";
+  document.getElementById("user-toast-msg").textContent = msg;
+  t.className = "show " + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => {
+    t.className = "";
+  }, 4000);
 }
 
 // On page load — restore admin button if already logged in as admin

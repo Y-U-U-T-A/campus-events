@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Event = require("../backend/models/Event");
 const { body, validationResult, query } = require("express-validator");
+const { validateObjectId } = require("../backend/middleware/validate");
 
 // Validation middleware
 const validateEvent = [
@@ -147,7 +148,7 @@ router.get("/upcoming", async (req, res) => {
 });
 
 // GET /api/events/:id - Get single event
-router.get("/:id", async (req, res) => {
+router.get("/:id", validateObjectId(), async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
 
@@ -197,7 +198,7 @@ router.post("/", validateEvent, async (req, res) => {
 });
 
 // PUT /api/events/:id - Update event
-router.put("/:id", validateEvent, async (req, res) => {
+router.put("/:id", validateObjectId(), validateEvent, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -231,7 +232,7 @@ router.put("/:id", validateEvent, async (req, res) => {
 });
 
 // DELETE /api/events/:id - Delete event (soft delete)
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", validateObjectId(), async (req, res) => {
   try {
     const event = await Event.findByIdAndUpdate(
       req.params.id,

@@ -47,8 +47,22 @@ const authMiddleware = async (req, res, next) => {
 // Validation middleware - matches Registration model fields
 const validateRegistration = [
   body("eventId").notEmpty().withMessage("Event ID is required"),
-  body("fullName").trim().notEmpty().withMessage("Full name is required"),
-  body("email").isEmail().withMessage("Valid email is required"),
+  body("fullName")
+    .trim()
+    .notEmpty()
+    .withMessage("Full name is required")
+    .isLength({ min: 2, max: 100 })
+    .withMessage("Name must be 2–100 characters")
+    .matches(/^[a-zA-Z\s'-]+$/)
+    .withMessage("Name can only contain letters and spaces"),
+  body("email")
+    .isEmail()
+    .withMessage("Please enter a valid email address")
+    .normalizeEmail(),
+  body("phoneNumber")
+    .optional({ checkFalsy: true })
+    .matches(/^\d{7,15}$/)
+    .withMessage("Phone must contain only digits (7–15 digits)"),
   body("department")
     .optional()
     .isIn([
@@ -59,7 +73,8 @@ const validateRegistration = [
       "cultural",
       "sports",
       "other",
-    ]),
+    ])
+    .withMessage("Invalid department"),
 ];
 
 // POST /api/registrations - Register for an event
@@ -67,7 +82,11 @@ router.post("/", validateRegistration, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, errors: errors.array() });
+      return res.status(400).json({
+        success: false,
+        message: errors.array()[0].msg,
+        errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
+      });
     }
 
     console.log("Registration request body:", req.body);

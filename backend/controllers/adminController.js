@@ -164,12 +164,27 @@ exports.getAllEvents = async (req, res) => {
 // @access  Private/Admin
 exports.createEvent = async (req, res) => {
   try {
+    const { validationResult } = require("express-validator");
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: errors.array()[0].msg,
+        errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
+      });
+    }
     const event = new Event(req.body);
     await event.save();
     res
       .status(201)
       .json({ success: true, message: "Event created", data: event });
   } catch (error) {
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      return res
+        .status(400)
+        .json({ success: false, message: messages[0], errors: messages });
+    }
     res
       .status(500)
       .json({
@@ -185,6 +200,15 @@ exports.createEvent = async (req, res) => {
 // @access  Private/Admin
 exports.updateEvent = async (req, res) => {
   try {
+    const { validationResult } = require("express-validator");
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: errors.array()[0].msg,
+        errors: errors.array().map((e) => ({ field: e.path, message: e.msg })),
+      });
+    }
     const event = await Event.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -195,6 +219,12 @@ exports.updateEvent = async (req, res) => {
         .json({ success: false, message: "Event not found" });
     res.json({ success: true, message: "Event updated", data: event });
   } catch (error) {
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      return res
+        .status(400)
+        .json({ success: false, message: messages[0], errors: messages });
+    }
     res
       .status(500)
       .json({
@@ -221,13 +251,11 @@ exports.deleteEvent = async (req, res) => {
         .json({ success: false, message: "Event not found" });
     res.json({ success: true, message: "Event deleted" });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error deleting event",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error deleting event",
+      error: error.message,
+    });
   }
 };
 
@@ -245,13 +273,11 @@ exports.getParticipants = async (req, res) => {
       data: registrations,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error fetching participants",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching participants",
+      error: error.message,
+    });
   }
 };
 
