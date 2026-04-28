@@ -818,6 +818,13 @@ function closeAllModals() {
 }
 
 function openRegistrationModal(eventId) {
+  // Check if user is logged in
+  if (!currentUser) {
+    alert("Please login first to register for events! 🔐");
+    openLoginModal();
+    return;
+  }
+
   // Find event by id or _id
   const event = mockEvents.find(
     (e) => (e.id || e._id) === eventId || e._id === eventId || e.id === eventId,
